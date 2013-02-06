@@ -2,6 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import play.api.data._
 import play.api.libs.json._
 import com.codahale.jerkson.Json._
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -14,6 +15,8 @@ import icircles.concreteDiagram._
 import play.api.libs.concurrent.Akka
 import play.api.Play.current
 
+import views._
+
 object Application extends Controller {
 
   def index = Action { request =>
@@ -22,16 +25,15 @@ object Application extends Controller {
           Async {
               Akka.future { doDrawing(request.body) }.map {result => Ok(result) }
               }
-      case Some("text/html")        => Ok(views.html.index("Your new application is ready."))
-      case Some(reqType)            => BadRequest("Requested type " + reqType + " was not recognised")
-      case None                     => BadRequest("You must specify a content-type in the request")
+      // text/html, other or None
+      case _ => Ok(html.index())
     }
   }
 
   def doDrawing (body: AnyContent) = {
     body.asJson match {
       case Some(o) => Json.toJson(Map ("Result" -> drawDiagram(o.toString)))
-//      case None    => BadRequest("No Json object passed to draw");
+      case None    => Json.toJson(Map ("Result" -> "null"));
     }
   }
 
